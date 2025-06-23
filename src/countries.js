@@ -15,6 +15,7 @@ export const isoCountries = [
     { id: "PT", text: "Portugal" },
     { id: "RE", text: "Reunion" },
     { id: "IM", text: "Ile de Man" },
-    { id: "TW", text: "Taiwan" }
+    { id: "TW", text: "Taiwan" },
+    { id: "DZ", text: "Algeria" },
   ];
   
