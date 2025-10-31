@@ -146,7 +146,7 @@ function fetchSuggestions(response, isProd) {
     let prediction = item;
     let prediction_id = item.public_id
     let predictionClass = "no-viewpoint";
-    let predictionTypes = item.types.join("|");
+    let predictionTypes = item.types.join(" | ");
     let formatted_name = "";
     let formatted_description = "";
     if (endpoint == "search") {
