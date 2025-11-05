@@ -1,13 +1,11 @@
 // endpoint_select.js
 
+/**
+ * Gets the currently selected endpoint
+ * @returns {string} Selected endpoint value
+ */
 export function getTargetEnpoint() {
-  var selectedEnpoint = document.getElementById("endpoint-select").value;
-  console.log(
-    `**endpoint: ${selectedEnpoint.toUpperCase()} **`
-  );
-  return selectedEnpoint;
+  const selectedEndpoint = document.getElementById("endpoint-select").value;
+  console.log(`**endpoint: ${selectedEndpoint.toUpperCase()} **`);
+  return selectedEndpoint;
 }
-
-document.getElementById("endpoint-select").addEventListener("change", (e) => {
-  // nothing
-});

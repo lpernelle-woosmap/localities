@@ -1,0 +1,161 @@
+// api-service.js - Unified API service for Woosmap Localities API
+
+import { buildQueryString } from "./utils.js";
+import { CONFIG } from "./config.js";
+import { getTargetEnvironment, getProdEnvironment } from "./environment_select.js";
+import { getTargetEnpoint } from "./endpoint_select.js";
+
+const queryParams = new URLSearchParams(window.location.search);
+const lang = queryParams.get("language") || CONFIG.API.DEFAULT_LANGUAGE;
+
+/**
+ * Shows error modal with message
+ * @param {string} messageHtml - Error message (can contain HTML)
+ */
+function showErrorModal(messageHtml) {
+  const modal = document.getElementById("error-modal");
+  const msg = document.getElementById("error-message");
+  if (modal && msg) {
+    msg.innerHTML = messageHtml;
+    modal.classList.remove("hidden");
+  }
+}
+
+/**
+ * Builds API arguments for autocomplete/search requests
+ * @param {Object} params - Request parameters
+ * @returns {Object} API arguments
+ */
+function buildApiArgs({ input, components, types, extended, location, radius }) {
+  const endpoint = getTargetEnpoint();
+  const args = {
+    input,
+    language: lang,
+    data: "advanced"
+  };
+
+  if (extended) {
+    args.extended = "postal_code";
+  }
+
+  if (endpoint === "search") {
+    args.location = "0,0";
+  } else if (endpoint === "geocode") {
+    args.address = input;
+  }
+
+  if (location) {
+    args.location = `${location.lat()},${location.lng()}`;
+  }
+
+  if (radius) {
+    args.radius = radius;
+  }
+
+  if (components) {
+    args.components = components;
+  }
+
+  if (types) {
+    args.types = types;
+  }
+
+  return args;
+}
+
+/**
+ * Generic API fetch with error handling
+ * @param {string} url - API URL
+ * @param {boolean} showErrors - Whether to show error modal
+ * @returns {Promise} API response
+ */
+async function fetchApi(url, showErrors = false) {
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok && showErrors) {
+      const details = data?.details;
+      const message = details
+        ? `<pre>${JSON.stringify(details, null, 2)}</pre>`
+        : "Unknown API error.";
+      showErrorModal(message);
+    }
+
+    return data;
+  } catch (err) {
+    if (showErrors) {
+      showErrorModal(err.message || "A network error occurred.");
+    }
+    throw err;
+  }
+}
+
+/**
+ * Performs autocomplete/search request
+ * @param {Object} params - Search parameters
+ * @param {boolean} isProduction - Whether to use production environment
+ * @returns {Promise} API response
+ */
+export async function autocompleteSearch(params, isProduction = false) {
+  const env = isProduction ? getProdEnvironment() : getTargetEnvironment();
+  const endpoint = getTargetEnpoint();
+  const args = {
+    key: env.woosmap_key,
+    ...buildApiArgs(params)
+  };
+
+  const url = `${env.url}${endpoint}/?${buildQueryString(args)}`;
+  console.log(`autocompleteSearch (${isProduction ? 'prod' : 'dev'}) - args:`, args);
+
+  return fetchApi(url, isProduction);
+}
+
+/**
+ * Gets details for a specific locality
+ * @param {string} publicId - Public ID of the locality
+ * @param {string} fields - Fields to retrieve (pipe-separated)
+ * @param {boolean} isProduction - Whether to use production environment
+ * @returns {Promise} API response
+ */
+export async function getDetails(publicId, fields, isProduction = false) {
+  const env = isProduction ? getProdEnvironment() : getTargetEnvironment();
+  const args = {
+    key: env.woosmap_key,
+    language: lang,
+    public_id: publicId
+  };
+
+  if (fields) {
+    args.fields = fields;
+  }
+
+  const url = `${env.url}details/?${buildQueryString(args)}`;
+  return fetchApi(url, !isProduction);
+}
+
+/**
+ * Performs reverse geocoding
+ * @param {Object} latlng - Latitude/longitude object
+ * @param {string} components - Country restrictions
+ * @param {string} types - Type restrictions
+ * @returns {Promise} API response
+ */
+export async function reverseGeocode(latlng, components, types) {
+  const env = getTargetEnvironment();
+  const args = {
+    key: env.woosmap_key,
+    latlng: `${latlng.lat},${latlng.lng}`
+  };
+
+  if (components) {
+    args.components = components;
+  }
+
+  if (types) {
+    args.types = types;
+  }
+
+  const url = `${env.url}geocode/?${buildQueryString(args)}`;
+  return fetchApi(url, false);
+}
