@@ -4,12 +4,14 @@ An interactive web application for testing and demonstrating the [Woosmap Locali
 
 ## Features
 
+- **Modern Tailwind UI** - Clean, responsive interface with a professional 3-panel layout
 - **Real-time Autocomplete Search** - Search for addresses, localities, postal codes, and points of interest
-- **Location Details** - Retrieve detailed information about selected locations
+- **Location Details** - Retrieve detailed information about selected locations in a dedicated panel
 - **Reverse Geocoding** - Click on the map to get address information from coordinates
-- **Multi-Environment Support** - Compare results between development, production, and PR deployments
+- **Multi-Environment Support** - Side-by-side comparison between development and production APIs
 - **Advanced Filtering** - Filter by country, location type, and geographical bias
-- **Interactive Map** - Visual display of locations with markers and viewport overlays
+- **Interactive Map** - Full-screen map with markers and viewport overlays
+- **Responsive Design** - Works seamlessly on desktop with adaptive sidebars
 
 ## Quick Start
 
@@ -159,10 +161,9 @@ localities/
 │   │                      # - ISO country codes and names
 │   │                      # - Used for country filtering
 │   │
-│   └── styles.css         # Application styles (4504 lines)
-│                          # - UI styling and layout
-│                          # - Map container styles
-│                          # - Result list styling
+│   └── styles.css.backup  # Legacy styles (archived)
+│                          # - Replaced by Tailwind CSS utility classes
+│                          # - Kept as backup reference
 ```
 
 ## Usage
@@ -222,6 +223,7 @@ export const CONFIG = {
 
 ## Technologies
 
+- **Tailwind CSS** - Modern utility-first CSS framework for responsive design
 - **Woosmap SDK** - Interactive maps and location services
 - **jQuery 3.6.0** - DOM manipulation
 - **Selectize.js** - Enhanced select dropdowns

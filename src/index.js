@@ -121,6 +121,14 @@ async function handleMapClick(event) {
  */
 function toggleCountry(countryElement) {
   countryElement.classList.toggle("active");
+  countryElement.classList.toggle("bg-blue-100");
+  countryElement.classList.toggle("border-blue-500");
+
+  const iconWrapper = countryElement.querySelector('.active-icon-wrapper');
+  if (iconWrapper) {
+    iconWrapper.classList.toggle("hidden");
+  }
+
   componentsRestriction = [];
 
   document.querySelectorAll(".country.active").forEach(({ dataset }) => {
@@ -132,14 +140,17 @@ function toggleCountry(countryElement) {
 
   const activeCountryList = componentsRestriction.map(
     ({ id, text }) =>
-      `<div class="country"><span class="flag-icon flag-icon-${id.toLowerCase()}"></span><span class="flag-text">${text}</span></div>`
+      `<div class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1 mb-1">
+        <span class="flag-icon flag-icon-${id.toLowerCase()}"></span>
+        <span>${text}</span>
+      </div>`
   );
 
   const activeRestrictionsEl = document.querySelector("#active-restrictions");
   if (activeRestrictionsEl) {
     activeRestrictionsEl.innerHTML = activeCountryList.length > 0
       ? activeCountryList.join("")
-      : "No active restrictions...";
+      : '<span class="text-gray-500">No active restrictions...</span>';
   }
 }
 
@@ -150,7 +161,7 @@ function initUI() {
   const multiSelect = document.querySelector(".multiselect");
   const countries = document.getElementById("countries");
   const overlayCb = document.getElementById("bgOverlay");
-  const input = document.querySelector(".autocomplete-input > input");
+  const input = document.getElementById("input");
   const extendedCheckbox = document.getElementById("extended-checkbox");
   const biasCheckbox = document.getElementById("bias-checkbox");
   const typesSelect = document.getElementById("types-select");
@@ -183,14 +194,14 @@ function initUI() {
 
   // Country selection dropdown
   const showCountriesList = () => {
-    if (countries) countries.style.display = "flex";
-    if (overlayCb) overlayCb.style.display = "block";
+    if (countries) countries.classList.remove("hidden");
+    if (overlayCb) overlayCb.classList.remove("hidden");
     componentExpanded = true;
   };
 
   const hideCountriesList = () => {
-    if (countries) countries.style.display = "none";
-    if (overlayCb) overlayCb.style.display = "none";
+    if (countries) countries.classList.add("hidden");
+    if (overlayCb) overlayCb.classList.add("hidden");
     componentExpanded = false;
   };
 
@@ -237,16 +248,27 @@ function initUI() {
 
   // Populate countries list
   if (countries) {
-    const countryList = isoCountries.map(
-      ({ id, text }) =>
-        `<div class="country" data-countrycode="${id}" data-countrytext="${text}">
-          <span class="flag-icon flag-icon-${id.toLowerCase()}"></span>
-          <span class="flag-text">${text}</span>
-          <div class='active-icon-wrapper'></div>
-        </div>`
-    );
+    const countriesGrid = countries.querySelector("#countries-grid");
+    if (countriesGrid) {
+      const countryList = isoCountries.map(
+        ({ id, text }) =>
+          `<div class="country flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors" data-countrycode="${id}" data-countrytext="${text}">
+            <span class="flag-icon flag-icon-${id.toLowerCase()}"></span>
+            <span class="flex-1 text-sm">${text}</span>
+            <div class='active-icon-wrapper hidden'>
+              <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>`
+      );
 
-    countries.innerHTML = countryList.join("") + "<button id='btnRestrict'>Apply restrictions</button>";
+      countriesGrid.innerHTML = countryList.join("");
+
+      document.querySelectorAll(".country").forEach(country => {
+        country.addEventListener("click", () => toggleCountry(country));
+      });
+    }
 
     const btnRestrict = document.querySelector("#btnRestrict");
     if (btnRestrict) {
@@ -255,10 +277,6 @@ function initUI() {
         performSearch();
       });
     }
-
-    document.querySelectorAll(".country").forEach(country => {
-      country.addEventListener("click", () => toggleCountry(country));
-    });
   }
 
   // Error modal close button

@@ -1,94 +1,278 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <title>Woosmap Localities API</title>
   <meta charset="UTF-8" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Flag Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css" />
-  <link rel="stylesheet" type="text/css" href="src/styles.css">
+
+  <!-- Selectize CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.css" />
+
+  <!-- Custom styles -->
+  <style>
+    /* Map container must have explicit height */
+    #map {
+      height: 100%;
+      min-height: 400px;
+    }
+
+    /* Selectize overrides for Tailwind */
+    .selectize-control.multi .selectize-input {
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      padding: 0.5rem;
+    }
+
+    .selectize-control.multi .selectize-input.focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Custom scrollbar for results */
+    .suggestions-list {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    .suggestions-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .suggestions-list::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    .suggestions-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .suggestions-list::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
 </head>
 
-<body>
-  <div id="app">
-    <div id="map"></div>
-    <div class="options">
-      <label class="bold">Env:</label>
-      <select id="env-select">
-        <option value="">Select an Env...</option>
-        <option selected value="dev">Develop</option>
-        <option value="prod">Production</span></option>
-        <option value="pr" id="pr-deploy">PR deploy</option>
-      </select>
-      <select id="endpoint-select">
-        <option value="">Select an endpoint...</option>
-        <option selected value="autocomplete">Autocomplete/Details</option>
-        <option value="search">Search/Details</span></option>
-        <option value="geocode">Geocode</option>
-      </select>
-      <label class="bold" for="components-select">Components: </label>
-      <div id="active-restrictions">No active restrictions...</div>
-      <div class="multiselect">
-        <div class="selectBox">
-          <button>Set country restriction...</button>
+<body class="bg-gray-50">
+  <!-- Main Container -->
+  <div class="flex flex-col h-screen">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Woosmap Localities API</h1>
+            <p class="text-sm text-gray-600 mt-1">Testing & Demo Application</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex flex-col">
+              <label class="text-xs font-medium text-gray-700 mb-1">Environment</label>
+              <select id="env-select" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select Env...</option>
+                <option selected value="dev">Development</option>
+                <option value="prod">Production</option>
+                <option value="pr" id="pr-deploy">PR Deploy</option>
+              </select>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-xs font-medium text-gray-700 mb-1">Endpoint</label>
+              <select id="endpoint-select" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select Endpoint...</option>
+                <option selected value="autocomplete">Autocomplete/Details</option>
+                <option value="search">Search/Details</option>
+                <option value="geocode">Geocode</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
-      <label class="bold">Fields:</label>
-      <div>
-        <input type="checkbox" id="geometry" name="fields" value="geometry" />
-        <label for="geometry">Geometry <i>only</i></label>
-      </div>
-      <label for="types-select" class="bold">Types:</label>
-      <select id="types-select">
-        <option value="">Select a type...</option>
-        <option selected value="locality">Locality</option>
-        <option value="postal_code">Postal code</option>
-        <option value="address">Address</option>
-        <option value="airport">Airport</option>
-        <option value="tourist_attraction">Tourist Attraction</option>
-        <option value="amusement_park">Amusement Park</option>
-        <option value="admin_level">Admin Level</option>
-        <option value="point_of_interest">point_of_interest</option>
-        <option value="train_station">Railway station</option>
-        <option value="metro_station">Metro station</option>
-        <option value="shopping">Shopping mall</option>
-        <option value="country">Country</option>
-      </select>
-      <label class="bold">Additional parameters</label>
-      <div>
-        <input type="checkbox" id="extended-checkbox" name="extended" value="extended" />
-        <label for="extended">Extended postal codes</label>
-      </div>
-      <label class="bold">Geographical bias:</label>
-      <div>
-        <input type="checkbox" id="bias-checkbox" name="bias" value="bias" />
-        <label for="bias">Center of the map</label>
-      </div>
-    </div>
+    </header>
 
-    <div class="addressDetails options"></div>
-    <div class="autocomplete-input-container">
-      <div class="autocomplete-input">
-        <input id="input" autocomplete="off" type="text" placeholder="Search an Address..." />
-      </div>
-      <div class="autocomplete-results-container">
-        <ul id="autocomplete-results" class="suggestions-list">
-          <!-- Résultats ici -->
-        </ul>
-        <ul id="autocomplete-results-compare" class="suggestions-list">
-          <!-- Résultats ici aussi -->
-        </ul>
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+
+      <!-- Left Sidebar - Controls -->
+      <aside class="w-80 bg-white border-r border-gray-200 overflow-y-auto">
+        <div class="p-6 space-y-6">
+
+          <!-- Search Input -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search Location</label>
+            <div class="autocomplete-input-container relative">
+              <input
+                id="input"
+                autocomplete="off"
+                type="text"
+                placeholder="Search an address, city, or place..."
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+              <div class="autocomplete-results-container absolute w-full mt-1 z-50">
+                <div class="bg-white rounded-lg shadow-xl border-2 border-gray-300 hidden" id="results-wrapper">
+                  <div class="border-b-2 border-gray-300 bg-gray-50 px-3 py-1.5 hidden" id="dev-header">
+                    <span class="text-xs font-semibold text-gray-700">Development</span>
+                  </div>
+                  <ul id="autocomplete-results" class="suggestions-list max-h-60 overflow-y-auto"></ul>
+                  <div class="border-b-2 border-gray-300 bg-blue-50 px-3 py-1.5 hidden" id="prod-header">
+                    <span class="text-xs font-semibold text-blue-700">Production</span>
+                  </div>
+                  <ul id="autocomplete-results-compare" class="suggestions-list max-h-60 overflow-y-auto"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Country Restrictions -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Country Restrictions</label>
+            <div id="active-restrictions" class="text-sm text-gray-500 mb-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              No active restrictions...
+            </div>
+            <div class="multiselect">
+              <button type="button" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                Set Country Restrictions
+              </button>
+            </div>
+          </div>
+
+          <!-- Types -->
+          <div>
+            <label for="types-select" class="block text-sm font-medium text-gray-700 mb-2">Location Types</label>
+            <select id="types-select" multiple class="w-full">
+              <option value="">Select types...</option>
+              <option selected value="locality">Locality</option>
+              <option value="postal_code">Postal Code</option>
+              <option value="address">Address</option>
+              <option value="airport">Airport</option>
+              <option value="tourist_attraction">Tourist Attraction</option>
+              <option value="amusement_park">Amusement Park</option>
+              <option value="admin_level">Admin Level</option>
+              <option value="point_of_interest">Point of Interest</option>
+              <option value="train_station">Railway Station</option>
+              <option value="metro_station">Metro Station</option>
+              <option value="shopping">Shopping Mall</option>
+              <option value="country">Country</option>
+            </select>
+          </div>
+
+          <!-- Fields -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Response Fields</label>
+            <div class="flex items-center">
+              <input
+                type="checkbox"
+                id="geometry"
+                name="fields"
+                value="geometry"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label for="geometry" class="ml-2 text-sm text-gray-700">Geometry <span class="italic">only</span></label>
+            </div>
+          </div>
+
+          <!-- Additional Parameters -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Parameters</label>
+            <div class="space-y-2">
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  id="extended-checkbox"
+                  name="extended"
+                  value="extended"
+                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label for="extended-checkbox" class="ml-2 text-sm text-gray-700">Extended Postal Codes</label>
+              </div>
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  id="bias-checkbox"
+                  name="bias"
+                  value="bias"
+                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label for="bias-checkbox" class="ml-2 text-sm text-gray-700">Geographical Bias (Map Center)</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Center - Map -->
+      <main class="flex-1 relative">
+        <div id="map" class="w-full h-full"></div>
+      </main>
+
+      <!-- Right Sidebar - Details -->
+      <aside class="w-96 bg-white border-l border-gray-200 overflow-y-auto">
+        <div class="p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Location Details</h2>
+          <div class="addressDetails space-y-3 text-sm hidden">
+            <!-- Details will be populated here -->
+          </div>
+          <div class="addressDetails-placeholder text-center py-12 text-gray-400">
+            <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <p class="text-sm">Search for a location or click on the map</p>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Country Selection Modal -->
+  <div id="countries" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Countries</h3>
+        <div id="countries-grid" class="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+          <!-- Countries will be populated here -->
+        </div>
+        <div class="mt-6 flex justify-end">
+          <button type="button" id="btnRestrict" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            Apply Restrictions
+          </button>
+        </div>
       </div>
     </div>
   </div>
-  </div>
-  <div id="countries" class="options"></div>
-  <div id="bgOverlay"></div>
-  <div id="error-modal" class="modal hidden">
-    <div class="modal-content">
-      <span id="close-error-modal" class="close">&times;</span>
-      <h2>Erreur</h2>
-      <p id="error-message">Une erreur est survenue</p>
+
+  <!-- Overlay -->
+  <div id="bgOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+  <!-- Error Modal -->
+  <div id="error-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+        <div class="flex items-start justify-between mb-4">
+          <h3 class="text-lg font-semibold text-red-600 flex items-center">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Error
+          </h3>
+          <button id="close-error-modal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div id="error-message" class="text-sm text-gray-700 bg-red-50 border border-red-200 rounded-lg p-4">
+          An error occurred
+        </div>
+      </div>
     </div>
   </div>
 
@@ -100,6 +284,7 @@
     integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+  <!-- Application Scripts -->
   <script type="module" src="src/index.js"></script>
   <script type="module" src="src/countries.js"></script>
   <script type="module" src="src/environment_select.js"></script>
